@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-content>
+    <!-- 직원 명부는 개인정보이므로 클라우드 백업에서 제외한다. 앱 내 내보내기 기능을 쓴다. -->
+    <exclude domain="database" path="nuguyo.db" />
+    <exclude domain="database" path="nuguyo.db-shm" />
+    <exclude domain="database" path="nuguyo.db-wal" />
+</full-backup-content>

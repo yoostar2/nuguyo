@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 수화기 + 물음표: "이 전화 누구요?" -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M38.8,34.4c-1.1,-1.1 -2.9,-1.1 -4,0l-5.6,5.6c-2.6,2.6 -3.2,6.6 -1.5,9.9c6,11.6 15.4,21 27,27c3.3,1.7 7.3,1.1 9.9,-1.5l5.6,-5.6c1.1,-1.1 1.1,-2.9 0,-4l-8.9,-8.9c-1.1,-1.1 -2.9,-1.1 -4,0l-3.4,3.4c-3.9,-2.4 -7.2,-5.7 -9.6,-9.6l3.4,-3.4c1.1,-1.1 1.1,-2.9 0,-4z" />
+    <path
+        android:fillColor="#FFC53D"
+        android:pathData="M67,20c-5.5,0 -10,4.1 -10,9.2h5.6c0,-2.1 2,-3.8 4.4,-3.8s4.4,1.7 4.4,3.8c0,1.4 -0.8,2.3 -2.6,3.7c-2.4,1.8 -4.6,3.5 -4.6,7.1v1.5h5.6v-1.1c0,-1.6 0.9,-2.4 2.7,-3.8c2.3,-1.8 4.5,-3.6 4.5,-7.4C77,24.1 72.5,20 67,20z" />
+    <path
+        android:fillColor="#FFC53D"
+        android:pathData="M64.2,45.4h5.6v5.4h-5.6z" />
+</vector>

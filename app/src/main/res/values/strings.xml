@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">누구요</string>
+
+    <string name="channel_overlay_name">발신자 팝업 표시 중</string>
+    <string name="channel_overlay_desc">팝업이 떠 있는 동안만 유지되는 조용한 알림입니다.</string>
+    <string name="channel_alert_name">발신자 알림</string>
+    <string name="channel_alert_desc">팝업을 띄울 수 없을 때 대신 표시되는 알림입니다.</string>
+
+    <string name="fgs_notification_title">발신자 확인 중</string>
+</resources>

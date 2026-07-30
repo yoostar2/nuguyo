@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      화면의 색은 Compose 가 전부 칠하므로 플랫폼 테마는 뼈대만 제공한다.
+      오버레이에 붙이는 ComposeView 도 이 테마의 컨텍스트를 쓴다.
+    -->
+    <style name="Theme.Nuguyo" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

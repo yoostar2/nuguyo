@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- 통화 상태(RINGING/OFFHOOK/IDLE)를 보고 팝업을 자동으로 닫기 위해 필요. -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <!-- 문자 수신 팝업. 기본 문자앱이 될 필요는 없다. -->
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <!-- 통화 화면 위에 팝업을 그리기 위한 핵심 권한. 설정 화면에서 사용자가 직접 허용해야 한다. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- 삼성 절전 정책에 서비스가 죽지 않도록 배터리 최적화 예외를 요청한다. -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    <!-- 팝업에서 바로 다시 걸기. -->
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+
+    <uses-feature
+        android:name="android.hardware.telephony"
+        android:required="false" />
+
+    <application
+        android:name=".NuguyoApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Nuguyo"
+        tools:targetApi="36">
+
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+          발신자 식별의 진입점. 시스템이 BIND_SCREENING_SERVICE 로 바인드하며,
+          앱이 ROLE_CALL_SCREENING 역할을 보유해야 실제로 호출된다.
+        -->
+        <service
+            android:name=".service.StaffCallScreeningService"
+            android:exported="true"
+            android:permission="android.permission.BIND_SCREENING_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.CallScreeningService" />
+            </intent-filter>
+        </service>
+
+        <!--
+          팝업 창의 수명을 붙잡아 두는 포그라운드 서비스.
+          phoneCall 타입은 기본 전화앱만 쓸 수 있어 specialUse 로 선언한다.
+        -->
+        <service
+            android:name=".service.CallerOverlayService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="caller_id_overlay" />
+        </service>
+
+        <receiver
+            android:name=".service.SmsReceiver"
+            android:exported="true"
+            android:permission="android.permission.BROADCAST_SMS">
+            <intent-filter android:priority="999">
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- 재부팅 후 번호 색인을 미리 데워 둔다(첫 통화 팝업 지연 방지). -->
+        <receiver
+            android:name=".service.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>
