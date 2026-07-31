@@ -40,6 +40,32 @@ class SettingsStore(context: Context) {
         get() = prefs.getInt(KEY_POPUP_Y, 0)
         set(value) = prefs.edit().putInt(KEY_POPUP_Y, value).apply()
 
+    /**
+     * 마지막으로 통화 스크리닝 콜백을 받은 기록.
+     *
+     * "역할을 못 받아서 콜백 자체가 안 온 것"과 "콜백은 왔는데 명부 매칭에 실패한 것"은
+     * 사용자 눈에는 똑같이 "팝업이 안 뜬다"로 보인다. 그 둘을 가르려면 콜백이
+     * 들어온 사실 자체를 남겨 두는 수밖에 없다.
+     */
+    val lastScreening: ScreeningTrace?
+        get() {
+            val at = prefs.getLong(KEY_SCREENING_AT, 0L)
+            if (at == 0L) return null
+            return ScreeningTrace(
+                at = at,
+                number = prefs.getString(KEY_SCREENING_NUMBER, null).orEmpty(),
+                outcome = prefs.getString(KEY_SCREENING_OUTCOME, null).orEmpty(),
+            )
+        }
+
+    fun recordScreening(number: String, outcome: String) {
+        prefs.edit()
+            .putLong(KEY_SCREENING_AT, System.currentTimeMillis())
+            .putString(KEY_SCREENING_NUMBER, number)
+            .putString(KEY_SCREENING_OUTCOME, outcome)
+            .apply()
+    }
+
     private companion object {
         const val KEY_SHOW_UNKNOWN = "show_unknown"
         const val KEY_DISMISS_ON_ANSWER = "dismiss_on_answer"
@@ -47,5 +73,16 @@ class SettingsStore(context: Context) {
         const val KEY_CALL_ENABLED = "call_enabled"
         const val KEY_SMS_ENABLED = "sms_enabled"
         const val KEY_POPUP_Y = "popup_y"
+
+        const val KEY_SCREENING_AT = "screening_at"
+        const val KEY_SCREENING_NUMBER = "screening_number"
+        const val KEY_SCREENING_OUTCOME = "screening_outcome"
     }
 }
+
+/** 마지막 통화 스크리닝 콜백의 흔적. 진단 화면에 그대로 표시한다. */
+data class ScreeningTrace(
+    val at: Long,
+    val number: String,
+    val outcome: String,
+)

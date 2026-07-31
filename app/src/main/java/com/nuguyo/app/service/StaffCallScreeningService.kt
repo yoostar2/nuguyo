@@ -28,13 +28,28 @@ class StaffCallScreeningService : CallScreeningService() {
         // 응답이 늦으면 사용자 전화가 늦게 울린다.
         respondToCall(callDetails, CallResponse.Builder().build())
 
-        if (callDetails.callDirection != Call.Details.DIRECTION_INCOMING) return
-
         val container = appContainer
-        if (!container.settings.callPopupEnabled) return
+        val settings = container.settings
 
         val rawNumber = callDetails.handle?.schemeSpecificPart
         val displayNumber = PhoneNumberNormalizer.format(rawNumber).ifBlank { UNKNOWN_LABEL }
+
+        // 콜백이 왔다는 사실부터 남긴다. 역할을 못 받아 콜백 자체가 안 온 것과
+        // 그 다음 단계에서 걸러진 것은 증상이 같아서, 이 흔적이 없으면 구분할 수 없다.
+        Log.i(TAG, "onScreenCall: direction=${callDetails.callDirection} number=$displayNumber")
+        settings.recordScreening(displayNumber, "감지됨")
+
+        // 발신 전화는 팝업 대상이 아니다. 다만 기기/버전에 따라 스크리닝 콜백의 방향이
+        // DIRECTION_UNKNOWN 으로 오는 경우가 있어, 명시적으로 발신일 때만 건너뛴다.
+        // (여기서 INCOMING 만 통과시키면 그런 기기에서는 아무 일도 일어나지 않는다.)
+        if (callDetails.callDirection == Call.Details.DIRECTION_OUTGOING) {
+            settings.recordScreening(displayNumber, "발신 통화라 건너뜀")
+            return
+        }
+        if (!settings.callPopupEnabled) {
+            settings.recordScreening(displayNumber, "설정에서 전화 팝업이 꺼져 있음")
+            return
+        }
 
         // 응답은 이미 끝냈고 남은 일은 색인 조회 두 번이다. 여기서 결과를 기다리는 편이
         // 미등록 번호마다 포그라운드 서비스를 띄웠다 끄는 것보다 낫다.
@@ -44,6 +59,11 @@ class StaffCallScreeningService : CallScreeningService() {
             }
         }
 
+        settings.recordScreening(
+            displayNumber,
+            match?.let { "${it.employee.name} 로 매칭 (${it.confidence})" } ?: "명부에서 찾지 못함",
+        )
+
         container.appScope.launch {
             runCatching {
                 container.events.record(
@@ -51,10 +71,10 @@ class StaffCallScreeningService : CallScreeningService() {
                     number = displayNumber,
                     kind = ContactKind.CALL,
                 )
-            }
+            }.onFailure { Log.w(TAG, "수신 이력을 남기지 못했다", it) }
         }
 
-        if (match == null && !container.settings.showUnknownNumbers) return
+        if (match == null && !settings.showUnknownNumbers) return
 
         val started = CallerOverlayService.show(
             context = this,
