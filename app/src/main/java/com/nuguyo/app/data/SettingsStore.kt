@@ -58,6 +58,35 @@ class SettingsStore(context: Context) {
             )
         }
 
+    /** 사용자가 붙여넣은 구글 시트 주소. 비어 있으면 연동하지 않은 상태다. */
+    var sheetUrl: String?
+        get() = prefs.getString(KEY_SHEET_URL, null)?.takeIf { it.isNotBlank() }
+        set(value) = prefs.edit().putString(KEY_SHEET_URL, value?.trim()).apply()
+
+    /** 12시간마다 자동으로 시트를 다시 읽을지. */
+    var sheetAutoSync: Boolean
+        get() = prefs.getBoolean(KEY_SHEET_AUTO, true)
+        set(value) = prefs.edit().putBoolean(KEY_SHEET_AUTO, value).apply()
+
+    val lastSync: SyncTrace?
+        get() {
+            val at = prefs.getLong(KEY_SYNC_AT, 0L)
+            if (at == 0L) return null
+            return SyncTrace(
+                at = at,
+                success = prefs.getBoolean(KEY_SYNC_OK, false),
+                summary = prefs.getString(KEY_SYNC_SUMMARY, null).orEmpty(),
+            )
+        }
+
+    fun recordSync(success: Boolean, summary: String) {
+        prefs.edit()
+            .putLong(KEY_SYNC_AT, System.currentTimeMillis())
+            .putBoolean(KEY_SYNC_OK, success)
+            .putString(KEY_SYNC_SUMMARY, summary)
+            .apply()
+    }
+
     fun recordScreening(number: String, outcome: String) {
         prefs.edit()
             .putLong(KEY_SCREENING_AT, System.currentTimeMillis())
@@ -77,8 +106,21 @@ class SettingsStore(context: Context) {
         const val KEY_SCREENING_AT = "screening_at"
         const val KEY_SCREENING_NUMBER = "screening_number"
         const val KEY_SCREENING_OUTCOME = "screening_outcome"
+
+        const val KEY_SHEET_URL = "sheet_url"
+        const val KEY_SHEET_AUTO = "sheet_auto"
+        const val KEY_SYNC_AT = "sync_at"
+        const val KEY_SYNC_OK = "sync_ok"
+        const val KEY_SYNC_SUMMARY = "sync_summary"
     }
 }
+
+/** 마지막 시트 동기화 결과. */
+data class SyncTrace(
+    val at: Long,
+    val success: Boolean,
+    val summary: String,
+)
 
 /** 마지막 통화 스크리닝 콜백의 흔적. 진단 화면에 그대로 표시한다. */
 data class ScreeningTrace(

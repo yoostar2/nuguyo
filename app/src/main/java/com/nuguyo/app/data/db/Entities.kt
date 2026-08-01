@@ -19,6 +19,9 @@ data class EmployeeEntity(
     val memo: String?,
     val tags: List<String>,
     val updatedAt: Long,
+    /** [com.nuguyo.app.domain.model.EmployeeSource] 의 이름. */
+    val source: String = "LOCAL",
+    val sourceKey: String? = null,
 )
 
 @Entity(

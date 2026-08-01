@@ -51,6 +51,11 @@ abstract class EmployeeDao {
     @Query("SELECT COUNT(*) FROM employee")
     abstract suspend fun count(): Int
 
+    /** 시트 동기화가 덮어쓰거나 지워도 되는 직원만. */
+    @Transaction
+    @Query("SELECT * FROM employee WHERE source = :source")
+    abstract suspend fun findBySource(source: String): List<EmployeeWithNumbers>
+
     @Upsert
     abstract suspend fun upsert(employee: EmployeeEntity)
 

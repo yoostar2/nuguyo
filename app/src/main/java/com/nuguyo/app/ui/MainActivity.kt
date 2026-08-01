@@ -17,6 +17,7 @@ import com.nuguyo.app.ui.editor.EmployeeEditorScreen
 import com.nuguyo.app.ui.history.HistoryScreen
 import com.nuguyo.app.ui.permissions.PermissionsScreen
 import com.nuguyo.app.ui.settings.SettingsScreen
+import com.nuguyo.app.ui.sheet.SheetSyncScreen
 import com.nuguyo.app.ui.theme.NuguyoTheme
 
 class MainActivity : ComponentActivity() {
@@ -50,6 +51,7 @@ private object Route {
     const val HISTORY = "history"
     const val PERMISSIONS = "permissions"
     const val SETTINGS = "settings"
+    const val SHEET = "sheet"
     const val EDITOR = "editor?id={id}&number={number}"
 
     fun editor(id: String? = null, number: String? = null): String {
@@ -117,7 +119,13 @@ private fun NuguyoNavHost(
             PermissionsScreen(onBack = { navController.popBackStack() })
         }
         composable(Route.SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onOpenSheetSync = { navController.navigate(Route.SHEET) },
+            )
+        }
+        composable(Route.SHEET) {
+            SheetSyncScreen(onBack = { navController.popBackStack() })
         }
     }
 }

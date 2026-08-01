@@ -16,6 +16,9 @@
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
     <!-- 팝업에서 바로 다시 걸기. -->
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <!-- 구글 시트에서 직원 명부를 가져오기 위해. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-feature
         android:name="android.hardware.telephony"

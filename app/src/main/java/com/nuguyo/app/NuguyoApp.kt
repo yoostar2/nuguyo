@@ -6,8 +6,10 @@ import com.nuguyo.app.data.EmployeeRepository
 import com.nuguyo.app.data.EventRepository
 import com.nuguyo.app.data.SettingsStore
 import com.nuguyo.app.data.db.NuguyoDatabase
+import com.nuguyo.app.data.sheet.SheetSync
 import com.nuguyo.app.domain.lookup.CallerLookup
 import com.nuguyo.app.service.Notifications
+import com.nuguyo.app.service.SheetSyncWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -25,6 +27,7 @@ class AppContainer(context: Context) {
     val events: EventRepository by lazy { EventRepository(database.contactEventDao()) }
     val lookup: CallerLookup by lazy { CallerLookup(employees) }
     val settings: SettingsStore by lazy { SettingsStore(context) }
+    val sheetSync: SheetSync by lazy { SheetSync(employees, settings) }
 
     /**
      * 화면이나 서비스보다 오래 살아야 하는 곁작업용 스코프.
@@ -48,6 +51,8 @@ class NuguyoApp : Application() {
             container.lookup.warmUp()
             runCatching { container.events.pruneOlderThan() }
         }
+        // 설정이 켜져 있으면 주기 동기화를 다시 건다(재부팅·업데이트 후 복구).
+        runCatching { SheetSyncWorker.apply(this) }
     }
 }
 

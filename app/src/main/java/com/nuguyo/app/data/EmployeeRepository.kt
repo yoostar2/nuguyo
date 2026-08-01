@@ -6,6 +6,7 @@ import com.nuguyo.app.data.db.EmployeeWithNumbers
 import com.nuguyo.app.data.db.PhoneNumberEntity
 import com.nuguyo.app.domain.lookup.CallerDirectory
 import com.nuguyo.app.domain.model.Employee
+import com.nuguyo.app.domain.model.EmployeeSource
 import com.nuguyo.app.domain.model.StaffNumber
 import com.nuguyo.app.domain.phone.PhoneNumberNormalizer
 import kotlinx.coroutines.flow.Flow
@@ -52,6 +53,8 @@ class EmployeeRepository(private val dao: EmployeeDao) : CallerDirectory {
             memo = employee.memo?.trim()?.takeIf { it.isNotEmpty() },
             tags = employee.tags.map { it.trim() }.filter { it.isNotEmpty() }.distinct(),
             updatedAt = System.currentTimeMillis(),
+            source = employee.source.name,
+            sourceKey = employee.sourceKey,
         )
         val numbers = employee.numbers
             .filter { it.raw.isNotBlank() }
@@ -72,6 +75,9 @@ class EmployeeRepository(private val dao: EmployeeDao) : CallerDirectory {
     }
 
     suspend fun delete(id: String) = dao.delete(id)
+
+    suspend fun findFromSheet(): List<Employee> =
+        dao.findBySource(EmployeeSource.SHEET.name).map { it.toModel() }
 }
 
 private fun EmployeeWithNumbers.toModel() = Employee(
@@ -93,4 +99,7 @@ private fun EmployeeWithNumbers.toModel() = Employee(
         )
     },
     updatedAt = employee.updatedAt,
+    source = runCatching { EmployeeSource.valueOf(employee.source) }
+        .getOrDefault(EmployeeSource.LOCAL),
+    sourceKey = employee.sourceKey,
 )
