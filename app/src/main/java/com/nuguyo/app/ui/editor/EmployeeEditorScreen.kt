@@ -56,6 +56,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import coil.compose.AsyncImage
 import com.nuguyo.app.appContainer
+import com.nuguyo.app.data.copyPhotoToAppStorage
+import com.nuguyo.app.data.deleteAppStoragePhoto
 import com.nuguyo.app.domain.phone.PhoneNumberNormalizer
 import kotlinx.coroutines.launch
 

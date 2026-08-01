@@ -1,4 +1,4 @@
-package com.nuguyo.app.ui.editor
+package com.nuguyo.app.data
 
 import android.content.Context
 import android.net.Uri
@@ -15,7 +15,7 @@ import java.util.UUID
 suspend fun copyPhotoToAppStorage(context: Context, source: Uri): Uri? =
     withContext(Dispatchers.IO) {
         runCatching {
-            val directory = File(context.filesDir, "photos").apply { mkdirs() }
+            val directory = File(context.filesDir, PHOTO_DIR).apply { mkdirs() }
             val target = File(directory, "${UUID.randomUUID()}.jpg")
             val copied = context.contentResolver.openInputStream(source)?.use { input ->
                 target.outputStream().use { output -> input.copyTo(output) }
@@ -25,9 +25,17 @@ suspend fun copyPhotoToAppStorage(context: Context, source: Uri): Uri? =
         }.getOrNull()
     }
 
-/** 사진을 바꾸거나 지울 때 이전 파일을 남기지 않는다. */
+/**
+ * 직원을 지우거나 사진을 바꿀 때 파일도 함께 치운다.
+ * 그러지 않으면 지운 직원의 사진이 저장소에 계속 쌓인다.
+ */
 fun deleteAppStoragePhoto(uri: String?) {
     val path = uri?.removePrefix("file://") ?: return
-    if (!path.contains("/photos/")) return
+    // 앱이 만든 파일만 건드린다. 다른 경로가 들어오면 무시.
+    if (!path.contains("/$PHOTO_DIR/")) return
     runCatching { File(path).delete() }
 }
+
+fun deleteAppStoragePhotos(uris: Collection<String?>) = uris.forEach(::deleteAppStoragePhoto)
+
+private const val PHOTO_DIR = "photos"

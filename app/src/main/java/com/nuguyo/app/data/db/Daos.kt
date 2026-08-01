@@ -68,6 +68,12 @@ abstract class EmployeeDao {
     @Query("DELETE FROM employee WHERE id = :id")
     abstract suspend fun delete(id: String)
 
+    @Query("DELETE FROM employee WHERE id IN (:ids)")
+    abstract suspend fun deleteAll(ids: List<String>)
+
+    @Query("DELETE FROM employee")
+    abstract suspend fun deleteEverything()
+
     /** 번호 목록은 부분 갱신 대신 통째로 교체한다(순서 변경/삭제를 한 번에 처리). */
     @Transaction
     open suspend fun save(employee: EmployeeEntity, numbers: List<PhoneNumberEntity>) {

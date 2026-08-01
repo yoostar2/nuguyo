@@ -76,8 +76,19 @@ class EmployeeRepository(private val dao: EmployeeDao) : CallerDirectory {
 
     suspend fun delete(id: String) = dao.delete(id)
 
+    /** SQLite 의 바인딩 변수 상한(999)에 걸리지 않게 나눠서 지운다. */
+    suspend fun delete(ids: Collection<String>) {
+        ids.chunked(DELETE_CHUNK).forEach { dao.deleteAll(it) }
+    }
+
+    suspend fun deleteAll() = dao.deleteEverything()
+
     suspend fun findFromSheet(): List<Employee> =
         dao.findBySource(EmployeeSource.SHEET.name).map { it.toModel() }
+
+    private companion object {
+        const val DELETE_CHUNK = 500
+    }
 }
 
 private fun EmployeeWithNumbers.toModel() = Employee(
