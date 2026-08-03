@@ -255,9 +255,18 @@ private fun SheetFormatCard() {
             Spacer(Modifier.height(8.dp))
             Text(
                 text = "• 이름과 전화번호는 반드시 있어야 합니다\n" +
-                    "• 번호가 여러 개면 한 칸에 쉼표나 줄바꿈으로 나누거나, " +
+                    "• 번호 표기는 아무렇게나 적어도 됩니다. " +
+                    "01012341234, 010-1234-1234, 010,1234,1234, 010 1234 1234 전부 같게 읽습니다\n" +
+                    "• 번호가 여러 개면 세미콜론(;)이나 줄바꿈으로 나누는 게 가장 확실합니다. " +
                     "전화번호2 처럼 열을 더 만들어도 됩니다\n" +
                     "• 사번을 적어 두면 시트에서 이름이나 번호를 고쳐도 같은 사람으로 이어집니다",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "번호 앞의 0 이 사라진다면 시트에서 해당 열의 서식을 " +
+                    "'일반 텍스트'로 바꾸세요. 숫자로 인식되면 자릿수가 깨집니다.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

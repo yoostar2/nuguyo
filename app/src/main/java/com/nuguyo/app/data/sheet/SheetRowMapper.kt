@@ -32,9 +32,6 @@ object SheetRowMapper {
         "phone", "mobile", "tel", "number", "contact",
     )
 
-    /** 한 칸에 번호를 여러 개 적는 경우를 대비한 구분자. */
-    private val PHONE_SEPARATORS = Regex("""[;,\n/]""")
-
     fun map(rows: List<List<String>>): SheetParseResult {
         if (rows.isEmpty()) {
             return SheetParseResult(emptyList(), listOf(SheetRowIssue(0, "시트가 비어 있습니다")))
@@ -75,11 +72,17 @@ object SheetRowMapper {
                 return@forEachIndexed
             }
 
-            val numbers = phoneColumns
+            val parsedCells = phoneColumns
                 .mapNotNull { cells.getOrNull(it) }
-                .flatMap { it.split(PHONE_SEPARATORS) }
-                .map { it.trim() }
-                .filter { it.isNotEmpty() }
+                .map { PhoneCellParser.parse(it) }
+
+            // 칸을 못 알아본 이유는 그대로 보고한다. 조용히 빠지면 시트를 고칠 수 없다.
+            parsedCells.flatMap { it.problems }.forEach { problem ->
+                issues += SheetRowIssue(rowNumber, "$name — $problem")
+            }
+
+            val numbers = parsedCells
+                .flatMap { it.numbers }
                 .filter { PhoneNumberNormalizer.normalize(it).isUsable }
                 .distinctBy { PhoneNumberNormalizer.normalize(it).digits }
 
