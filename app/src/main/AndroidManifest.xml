@@ -14,11 +14,26 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- 삼성 절전 정책에 서비스가 죽지 않도록 배터리 최적화 예외를 요청한다. -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <!-- 팝업에서 바로 다시 걸기. -->
-    <uses-permission android:name="android.permission.CALL_PHONE" />
     <!-- 구글 시트에서 직원 명부를 가져오기 위해. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!--
+      명부에서 전화/문자 앱을 여는 데 CALL_PHONE 은 필요 없다. ACTION_DIAL 로
+      번호만 채워 주고 거는 것은 사용자가 결정한다.
+      다만 Android 11+ 의 패키지 가시성 때문에, 어떤 앱이 처리할 수 있는지
+      알아보려면 아래 선언이 있어야 한다.
+    -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.DIAL" />
+            <data android:scheme="tel" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="smsto" />
+        </intent>
+    </queries>
 
     <uses-feature
         android:name="android.hardware.telephony"

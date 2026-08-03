@@ -21,7 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DeleteSweep
@@ -70,9 +72,14 @@ import com.nuguyo.app.appContainer
 import com.nuguyo.app.domain.model.Employee
 import com.nuguyo.app.domain.model.EmployeeSource
 import com.nuguyo.app.domain.phone.PhoneNumberNormalizer
+import com.nuguyo.app.ui.PhoneAction
+import com.nuguyo.app.ui.PhoneActions
 
 /** 어떤 삭제를 물어보는 중인지. null 이면 확인창이 없다. */
 private enum class DeleteRequest { SELECTED, EVERYTHING }
+
+/** 번호를 여러 개 가진 직원에게 어떤 번호로 걸지 물어보는 중. */
+private data class NumberChoice(val employee: Employee, val action: PhoneAction)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +97,19 @@ fun DirectoryScreen(
         },
     )
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     var pendingDelete by remember { mutableStateOf<DeleteRequest?>(null) }
+    var numberChoice by remember { mutableStateOf<NumberChoice?>(null) }
+
+    // 번호가 하나면 바로 열고, 여러 개면 어느 번호인지 물어본다.
+    fun startPhoneAction(employee: Employee, action: PhoneAction) {
+        val numbers = employee.numbers
+        when {
+            numbers.isEmpty() -> Unit
+            numbers.size == 1 -> PhoneActions.launch(context, action, numbers.first().raw)
+            else -> numberChoice = NumberChoice(employee, action)
+        }
+    }
 
     // 선택 중에 뒤로 가기를 누르면 앱을 나가는 대신 선택을 푼다.
     BackHandler(enabled = state.selectionMode) { viewModel.clearSelection() }
@@ -185,11 +204,24 @@ fun DirectoryScreen(
                                 }
                             },
                             onLongClick = { viewModel.toggleSelection(employee.id) },
+                            onCall = { startPhoneAction(employee, PhoneAction.CALL) },
+                            onMessage = { startPhoneAction(employee, PhoneAction.MESSAGE) },
                         )
                     }
                 }
             }
         }
+    }
+
+    numberChoice?.let { choice ->
+        NumberChoiceDialog(
+            choice = choice,
+            onDismiss = { numberChoice = null },
+            onPick = { number ->
+                numberChoice = null
+                PhoneActions.launch(context, choice.action, number)
+            },
+        )
     }
 
     pendingDelete?.let { request ->
@@ -359,6 +391,47 @@ private fun EmptyDirectory() {
     }
 }
 
+@Composable
+private fun NumberChoiceDialog(
+    choice: NumberChoice,
+    onDismiss: () -> Unit,
+    onPick: (String) -> Unit,
+) {
+    val verb = if (choice.action == PhoneAction.CALL) "전화" else "문자"
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("${choice.employee.name} · 어느 번호로 $verb 할까요?") },
+        text = {
+            Column {
+                choice.employee.numbers.forEach { number ->
+                    TextButton(
+                        onClick = { onPick(number.raw) },
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(Modifier.fillMaxWidth()) {
+                            Text(
+                                text = PhoneNumberNormalizer.format(number.raw),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            number.label?.takeIf { it.isNotBlank() }?.let { label ->
+                                Text(
+                                    text = label,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("취소") }
+        },
+    )
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun EmployeeRow(
@@ -367,6 +440,8 @@ private fun EmployeeRow(
     selectionMode: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
+    onCall: () -> Unit,
+    onMessage: () -> Unit,
 ) {
     Card(
         modifier = Modifier
@@ -447,6 +522,24 @@ private fun EmployeeRow(
                             if (employee.numbers.size > 1) " 외 ${employee.numbers.size - 1}건" else "",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+
+            // 선택 중에는 탭이 선택 토글이어야 하므로 감춘다.
+            if (!selectionMode && employee.numbers.isNotEmpty()) {
+                IconButton(onClick = onCall) {
+                    Icon(
+                        imageVector = Icons.Filled.Call,
+                        contentDescription = "${employee.name} 에게 전화",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+                IconButton(onClick = onMessage) {
+                    Icon(
+                        imageVector = Icons.Filled.Message,
+                        contentDescription = "${employee.name} 에게 문자",
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
             }
